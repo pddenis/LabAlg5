@@ -1,76 +1,91 @@
 # Обход бинарного дерева
 
+
 ## Описание задачи
 
-Реализовать различные методы обхода произвольного бинарного дерева (не обязательно дерева поиска) и вычислить некоторые его свойства.
+Реализовать методы обхода произвольного бинарного дерева и вычислить некоторые его свойства.
 
 **Выполненные пункты:**
 
--  `preorder` — прямой обход
--  `inorder` — симметричный обход
--  `postorder` — обратный обход
--  `level_order` — обход в ширину (BFS) по уровням
--  **Задание 9** — диаметр дерева
+`preorder` — прямой обход (DFS)
+`inorder` — симметричный обход (DFS)
+`postorder` — обратный обход (DFS)
+`bfs` / `level_order` — обход в ширину по уровням (BFS)
+**Задание 9** — диаметр дерева
 
 ---
 
 
-## Реализация
+### DFS-обходы
 
-### Класс TreeNode
-
-```python
-class TreeNode:
-    def __init__(self, val=0, left=None, right=None):
-        self.val   = val
-        self.left  = left
-        self.right = right
-```
-
-Стандартный узел бинарного дерева с полями значения и ссылками на левого и правого потомков.
-
----
-
-### Обязательная часть
+Каждая функция принимает необязательный параметр `result` — накапливаемый список. Это позволяет избежать создания промежуточных списков на каждом уровне рекурсии.
 
 #### Прямой обход — `preorder`
 
-Порядок посещения: **корень → левое поддерево → правое поддерево**.
-
 ```python
-def preorder(root):
-    if root is None:
-        return []
-    return [root.val] + preorder(root.left) + preorder(root.right)
+def preorder(root, result=None):
+    if result is None:
+        result = []
+    if root:
+        result.append(root.value)           # 1. узел
+        preorder(root.left, result)         # 2. левое поддерево
+        preorder(root.right, result)        # 3. правое поддерево
+    return result
 ```
 
 #### Симметричный обход — `inorder`
 
-Порядок посещения: **левое поддерево → корень → правое поддерево**.
-
 ```python
-def inorder(root):
-    if root is None:
-        return []
-    return inorder(root.left) + [root.val] + inorder(root.right)
+def inorder(root, result=None):
+    if result is None:
+        result = []
+    if root:
+        inorder(root.left, result)          # 1. левое поддерево
+        result.append(root.value)           # 2. узел
+        inorder(root.right, result)         # 3. правое поддерево
+    return result
 ```
 
 > Для дерева поиска (BST) `inorder` возвращает значения в отсортированном порядке.
 
 #### Обратный обход — `postorder`
 
-Порядок посещения: **левое поддерево → правое поддерево → корень**.
-
 ```python
-def postorder(root):
-    if root is None:
-        return []
-    return postorder(root.left) + postorder(root.right) + [root.val]
+def postorder(root, result=None):
+    if result is None:
+        result = []
+    if root:
+        postorder(root.left, result)        # 1. левое поддерево
+        postorder(root.right, result)       # 2. правое поддерево
+        result.append(root.value)           # 3. узел
+    return result
 ```
 
-#### Обход в ширину — `level_order`
+---
 
-Использует очередь (`deque`). Возвращает **список уровней**, где каждый уровень — отдельный список.
+### BFS-обход
+
+#### Плоский список — `bfs`
+
+```python
+def bfs(root):
+    result = []
+    if root is None:
+        return result
+    queue = deque([root])
+    while queue:
+        node = queue.popleft()
+        result.append(node.value)
+        if node.left:
+            queue.append(node.left)
+        if node.right:
+            queue.append(node.right)
+    return result
+```
+
+#### По уровням — `level_order`
+
+Расширение `bfs`: перед каждой итерацией фиксируем размер очереди — это число узлов текущего уровня. Возвращает список списков.
 
 ```python
 def level_order(root):
@@ -83,7 +98,7 @@ def level_order(root):
         level = []
         for _ in range(level_size):
             node = queue.popleft()
-            level.append(node.val)
+            level.append(node.value)
             if node.left:
                 queue.append(node.left)
             if node.right:
@@ -94,19 +109,17 @@ def level_order(root):
 
 ---
 
-### Вариативная часть — задание 9
+### Диаметр дерева (задание 9)
 
-#### Диаметр дерева — `diameter_of_tree`
+**Диаметр** — длина (в рёбрах) самого длинного пути между любыми двумя узлами. Путь не обязан проходить через корень.
 
-**Диаметр** — длина (в рёбрах) самого длинного пути между двумя узлами дерева. Путь не обязан проходить через корень.
-
-**Ключевое наблюдение:** диаметр через произвольный узел `v` равен сумме высот его левого и правого поддеревьев:
+**Ключевое наблюдение:** диаметр через узел `v` равен сумме высот его левого и правого поддеревьев:
 
 ```
 diameter(v) = height(v.left) + height(v.right)
 ```
 
-Алгоритм рекурсивно вычисляет высоту каждого узла, попутно обновляя глобальный максимум:
+Алгоритм рекурсивно вычисляет высоту каждого узла и попутно обновляет максимум:
 
 ```python
 def diameter_of_tree(root):
@@ -124,7 +137,7 @@ def diameter_of_tree(root):
     return max_diameter[0]
 ```
 
-> `max_diameter` обёрнут в список, чтобы вложенная функция `height` могла изменять его значение (аналог `nonlocal`).
+> `max_diameter` обёрнут в список, чтобы вложенная функция `height` могла изменять его значение.
 
 ---
 
@@ -187,6 +200,7 @@ def diameter_of_tree(root):
 | `preorder` | `[1, 2, 4, 5, 3, 6]` |
 | `inorder` | `[4, 2, 5, 1, 3, 6]` |
 | `postorder` | `[4, 5, 2, 6, 3, 1]` |
+| `bfs` | `[1, 2, 3, 4, 5, 6]` |
 | `level_order` | `[[1], [2, 3], [4, 5, 6]]` |
 | `diameter` | `4` |
 
@@ -197,6 +211,7 @@ def diameter_of_tree(root):
 | `preorder` | `[1, 2, 3, 4, 2, 4, 3]` |
 | `inorder` | `[3, 2, 4, 1, 4, 2, 3]` |
 | `postorder` | `[3, 4, 2, 4, 3, 2, 1]` |
+| `bfs` | `[1, 2, 2, 3, 4, 4, 3]` |
 | `level_order` | `[[1], [2, 2], [3, 4, 4, 3]]` |
 | `diameter` | `4` |
 
@@ -207,10 +222,11 @@ def diameter_of_tree(root):
 | `preorder` | `[1, 2, 3, 4]` |
 | `inorder` | `[1, 2, 3, 4]` |
 | `postorder` | `[4, 3, 2, 1]` |
+| `bfs` | `[1, 2, 3, 4]` |
 | `level_order` | `[[1], [2], [3], [4]]` |
 | `diameter` | `3` |
 
-> У вырожденного дерева `preorder` и `inorder` совпадают — это ожидаемо, так как у каждого узла есть только правый потомок.
+> У вырожденного дерева `preorder` и `inorder` совпадают — каждый узел имеет только правого потомка, поэтому левое поддерево всегда пусто.
 
 ### Дерево 4
 
@@ -219,7 +235,6 @@ def diameter_of_tree(root):
 | `preorder` | `[1, 2, 4, 5, 3]` |
 | `inorder` | `[5, 4, 2, 1, 3]` |
 | `postorder` | `[5, 4, 2, 3, 1]` |
+| `bfs` | `[1, 2, 3, 4, 5]` |
 | `level_order` | `[[1], [2, 3], [4], [5]]` |
 | `diameter` | `4` |
-
-
