@@ -3,48 +3,44 @@ from collections import deque
 
 class TreeNode:
     def __init__(self, value):
-        self.value = value      # хранимые данные
-        self.left  = None       # левый потомок
-        self.right = None       # правый потомок
+        self.value = value
+        self.left  = None
+        self.right = None
 
 
 
 def preorder(root, result=None):
-    """Прямой обход: корень → левое → правое."""
     if result is None:
         result = []
     if root:
-        result.append(root.value)           # 1. узел
-        preorder(root.left, result)         # 2. левое поддерево
-        preorder(root.right, result)        # 3. правое поддерево
+        result.append(root.value)           
+        preorder(root.left, result)        
+        preorder(root.right, result)       
     return result
 
 
 def inorder(root, result=None):
-    """Симметричный обход: левое → корень → правое."""
     if result is None:
         result = []
     if root:
-        inorder(root.left, result)          # 1. левое поддерево
-        result.append(root.value)           # 2. узел
-        inorder(root.right, result)         # 3. правое поддерево
+        inorder(root.left, result)
+        result.append(root.value)
+        inorder(root.right, result)
     return result
 
 
 def postorder(root, result=None):
-    """Обратный обход: левое → правое → корень."""
     if result is None:
         result = []
     if root:
-        postorder(root.left, result)        # 1. левое поддерево
-        postorder(root.right, result)       # 2. правое поддерево
-        result.append(root.value)           # 3. узел
+        postorder(root.left, result)
+        postorder(root.right, result)
+        result.append(root.value)
     return result
 
 
 
 def bfs(root):
-    """Обход в ширину — возвращает плоский список значений."""
     result = []
     if root is None:
         return result
@@ -52,7 +48,6 @@ def bfs(root):
     while queue:
         node = queue.popleft()
         result.append(node.value)
-        # добавляем детей в очередь
         if node.left:
             queue.append(node.left)
         if node.right:
@@ -61,7 +56,6 @@ def bfs(root):
 
 
 def level_order(root):
-    """Обход в ширину — возвращает список уровней (список списков)."""
     if root is None:
         return []
     result = []
@@ -90,7 +84,6 @@ def diameter_of_tree(root):
             return 0
         left_h  = height(node.left)
         right_h = height(node.right)
-        # диаметр через текущий узел = левая высота + правая высота
         max_diameter[0] = max(max_diameter[0], left_h + right_h)
         return 1 + max(left_h, right_h)
 
